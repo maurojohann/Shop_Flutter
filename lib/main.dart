@@ -12,6 +12,8 @@ class MyApp extends StatelessWidget {
       title: 'Minha Loja',
       theme: ThemeData(
         primarySwatch: Colors.blue,
+        accentColor: Colors.red[400],
+        fontFamily: 'Lato',
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: ProductOverviewScreen(),
