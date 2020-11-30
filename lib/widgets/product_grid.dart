@@ -8,7 +8,7 @@ class ProductGrid extends StatelessWidget {
   //final List<Product> product;
   final bool showFavoriteOnly;
 
-  const ProductGrid({this.showFavoriteOnly});
+  const ProductGrid(this.showFavoriteOnly);
 
   @override
   Widget build(BuildContext context) {

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shop/providers/cart.dart';
 
 class Badge extends StatelessWidget {
   final Widget child;
