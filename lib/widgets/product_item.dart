@@ -1,62 +1,70 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
+import 'package:shop/providers/products.dart';
 import 'package:shop/utils/app_routes.dart';
+
 import '../providers/product.dart';
-import '../providers/cart.dart';
 
 class ProductItem extends StatelessWidget {
+  final Product product;
+
+  const ProductItem(this.product);
+
   @override
   Widget build(BuildContext context) {
-    final Product product = Provider.of<Product>(context, listen: false);
-    final Cart cart = Provider.of<Cart>(context, listen: false);
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(10),
-      child: GridTile(
-        child: GestureDetector(
-          onTap: () {
-            //Navegacao sendo necessario nomear as rotas
-            Navigator.of(context)
-                .pushNamed(AppRoutes.PRODUCT_DETAIL, arguments: product);
-
-            //Navigacao sem a necessidade de nomear as rotas
-            //Navigator.of(context).push(MaterialPageRoute(
-            //  builder: (ctx) => ProductDetailScreen(product),
-            // ));
-          },
-          child: Image.network(
-            product.imageUrl,
-            fit: BoxFit.cover,
-          ),
+    return ListTile(
+      leading: CircleAvatar(
+        backgroundImage: NetworkImage(
+          product.imageUrl,
         ),
-        footer: GridTileBar(
-          backgroundColor: Colors.black87,
-          leading: Consumer<Product>(
-            builder: (ctx, product, _) => IconButton(
-              color: Theme.of(context).accentColor,
-              //iconSize: 18,
+      ),
+      title: Text(product.title),
+      trailing: Container(
+        width: 100,
+        child: Row(
+          children: [
+            IconButton(
               icon: Icon(
-                product.isFavorite ? Icons.favorite : Icons.favorite_border,
+                Icons.edit,
+                color: Theme.of(context).primaryColor,
               ),
               onPressed: () {
-                product.toggleFavorite();
+                Navigator.of(context).pushNamed(
+                  AppRoutes.PRODUCT_FORM,
+                  arguments: product,
+                );
               },
             ),
-          ),
-          title: Text(
-            product.title,
-            textAlign: TextAlign.left,
-            overflow: TextOverflow.clip,
-          ),
-          trailing: IconButton(
-              iconSize: 18,
+            IconButton(
               icon: Icon(
-                Icons.add_shopping_cart,
+                Icons.delete,
+                color: Theme.of(context).accentColor,
               ),
               onPressed: () {
-                cart.addItem(product);
-              }),
+                showDialog(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: Text('Tem Certeza'),
+                    actions: [
+                      FlatButton(
+                        child: Text('Não'),
+                        onPressed: () => Navigator.of(ctx).pop(false),
+                      ),
+                      FlatButton(
+                        child: Text('Sim'),
+                        onPressed: () => Navigator.of(ctx).pop(true),
+                      ),
+                    ],
+                  ),
+                ).then((value) {
+                  if (value) {
+                    Provider.of<Products>(context, listen: false)
+                        .deleteProducts(product.id);
+                  }
+                });
+              },
+            ),
+          ],
         ),
       ),
     );
