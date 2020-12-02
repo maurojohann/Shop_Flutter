@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:shop/data/dummy_data.dart';
 import 'package:shop/providers/product.dart';
 
@@ -13,14 +15,32 @@ class Products with ChangeNotifier {
     return _items.where((element) => element.isFavorite).toList();
   }
 
-  void addProduct(Product newProduct) {
-    _items.add(Product(
-        id: Random().nextDouble().toString(),
-        title: newProduct.title,
-        price: newProduct.price,
-        description: newProduct.description,
-        imageUrl: newProduct.imageUrl));
-    notifyListeners();
+  Future<void> addProduct(Product newProduct) {
+    const url = 'https://shop-flutter-cod3r.firebaseio.com/products';
+
+    return http
+        .post(
+      url,
+      body: json.encode({
+        'title': newProduct.title,
+        'description': newProduct.description,
+        'price': newProduct.price,
+        'imageUrl': newProduct.imageUrl,
+        'isFavorite': newProduct.isFavorite,
+      }),
+    )
+        .then((response) {
+      _items.add(
+        Product(
+          id: json.decode(response.body)['name'],
+          title: newProduct.title,
+          price: newProduct.price,
+          description: newProduct.description,
+          imageUrl: newProduct.imageUrl,
+        ),
+      );
+      notifyListeners();
+    });
   }
 
   int get itemsCount {

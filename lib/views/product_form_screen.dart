@@ -15,6 +15,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   final _imageUrlController = TextEditingController();
   final _form = GlobalKey<FormState>();
   final _formData = Map<String, Object>();
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -84,13 +85,38 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       imageUrl: _formData['imageUrl'],
     );
 
+    setState(() {
+      _isLoading = true;
+    });
+
     final products = Provider.of<Products>(context, listen: false);
     if (_formData['id'] == null) {
-      products.addProduct(product);
+      products.addProduct(product).catchError((error) {
+        return showDialog<Null>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+                  title: Text('Ocorreu um erro'),
+                  content: Text('Ocorrreu um erro para salvar o produto!'),
+                  actions: [
+                    FlatButton(
+                        color: Theme.of(context).primaryColor,
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: Text('ok'))
+                  ],
+                ));
+      }).then((_) {
+        setState(() {
+          _isLoading = false;
+        });
+        Navigator.of(context).pop();
+      });
     } else {
       products.updateProduct(product);
+      setState(() {
+        _isLoading = false;
+      });
+      Navigator.of(context).pop();
     }
-    Navigator.of(context).pop();
   }
 
   @override
@@ -106,118 +132,125 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
               })
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(15.0),
-        child: Form(
-            key: _form,
-            child: ListView(
-              shrinkWrap: true,
-              children: [
-                TextFormField(
-                  initialValue: _formData['title'],
-                  decoration: InputDecoration(labelText: 'Titulo'),
-                  textInputAction: TextInputAction.next,
-                  onFieldSubmitted: (_) {
-                    FocusScope.of(context).requestFocus(_priceFocusNode);
-                  },
-                  onSaved: (value) => _formData['title'] = value,
-                  validator: (value) {
-                    bool isEmpty = value.trim().isEmpty;
-                    bool isInvalid = value.trim().length < 3;
-
-                    if (isEmpty || isInvalid) {
-                      return 'Informe um titulo válido!';
-                    }
-                    return null;
-                  },
-                ),
-                TextFormField(
-                  initialValue: _formData['price'].toString(),
-                  decoration: InputDecoration(labelText: 'Preço'),
-                  textInputAction: TextInputAction.next,
-                  focusNode: _priceFocusNode,
-                  keyboardType: TextInputType.numberWithOptions(decimal: true),
-                  onFieldSubmitted: (_) {
-                    FocusScope.of(context).requestFocus(_descriptionFocusNode);
-                  },
-                  onSaved: (value) => _formData['price'] = double.parse(value),
-                  validator: (value) {
-                    bool isEmpty = value.trim().isEmpty;
-                    var newPrice = double.tryParse(value);
-                    bool isValid = newPrice == 0 || newPrice <= 0;
-
-                    if (isEmpty || isValid) {
-                      return 'Informe Preço válido!';
-                    }
-                    return null;
-                  },
-                ),
-                TextFormField(
-                  initialValue: _formData['description'],
-                  decoration: InputDecoration(labelText: 'Descrição'),
-                  maxLines: 3,
-                  keyboardType: TextInputType.multiline,
-                  focusNode: _descriptionFocusNode,
-                  onSaved: (value) => _formData['description'] = value,
-                  validator: (value) {
-                    bool isEmpty = value.trim().isEmpty;
-                    bool isInvalid = value.trim().length < 10;
-
-                    if (isEmpty || isInvalid) {
-                      return 'Informe Descrição válida!';
-                    }
-                    return null;
-                  },
-                ),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        decoration: InputDecoration(labelText: 'URL da Imagem'),
-                        keyboardType: TextInputType.url,
-                        textInputAction: TextInputAction.done,
-                        focusNode: _imageUrlFocusNode,
-                        controller: _imageUrlController,
+      body: _isLoading
+          ? Center(
+              child: CircularProgressIndicator(),
+            )
+          : Padding(
+              padding: const EdgeInsets.all(15.0),
+              child: Form(
+                  key: _form,
+                  child: ListView(
+                    shrinkWrap: true,
+                    children: [
+                      TextFormField(
+                        initialValue: _formData['title'],
+                        decoration: InputDecoration(labelText: 'Titulo'),
+                        textInputAction: TextInputAction.next,
                         onFieldSubmitted: (_) {
-                          _saveForm();
+                          FocusScope.of(context).requestFocus(_priceFocusNode);
                         },
-                        onSaved: (value) => _formData['imageUrl'] = value,
+                        onSaved: (value) => _formData['title'] = value,
                         validator: (value) {
                           bool isEmpty = value.trim().isEmpty;
-                          bool isInvalid = !isValidImageUrl(value);
+                          bool isInvalid = value.trim().length < 3;
+
                           if (isEmpty || isInvalid) {
-                            return 'Informe Url Valida!';
+                            return 'Informe um titulo válido!';
                           }
                           return null;
                         },
                       ),
-                    ),
-                    Container(
-                      constraints:
-                          BoxConstraints(minWidth: 100.0, minHeight: 100.0),
-                      width: 100.0,
-                      height: 100.0,
-                      margin: EdgeInsets.only(top: 8.0, left: 10.0),
-                      decoration: BoxDecoration(
-                          border: Border.all(
-                        color: Colors.grey,
-                        width: 1.0,
-                      )),
-                      alignment: Alignment.center,
-                      child: _imageUrlController.text.isEmpty
-                          ? Text('Informe URL')
-                          : FittedBox(
-                              child: Image.network(
-                                _imageUrlController.text,
-                              ),
+                      TextFormField(
+                        initialValue: _formData['price'].toString(),
+                        decoration: InputDecoration(labelText: 'Preço'),
+                        textInputAction: TextInputAction.next,
+                        focusNode: _priceFocusNode,
+                        keyboardType:
+                            TextInputType.numberWithOptions(decimal: true),
+                        onFieldSubmitted: (_) {
+                          FocusScope.of(context)
+                              .requestFocus(_descriptionFocusNode);
+                        },
+                        onSaved: (value) =>
+                            _formData['price'] = double.parse(value),
+                        validator: (value) {
+                          bool isEmpty = value.trim().isEmpty;
+                          var newPrice = double.tryParse(value);
+                          bool isValid = newPrice == 0 || newPrice <= 0;
+
+                          if (isEmpty || isValid) {
+                            return 'Informe Preço válido!';
+                          }
+                          return null;
+                        },
+                      ),
+                      TextFormField(
+                        initialValue: _formData['description'],
+                        decoration: InputDecoration(labelText: 'Descrição'),
+                        maxLines: 3,
+                        keyboardType: TextInputType.multiline,
+                        focusNode: _descriptionFocusNode,
+                        onSaved: (value) => _formData['description'] = value,
+                        validator: (value) {
+                          bool isEmpty = value.trim().isEmpty;
+                          bool isInvalid = value.trim().length < 10;
+
+                          if (isEmpty || isInvalid) {
+                            return 'Informe Descrição válida!';
+                          }
+                          return null;
+                        },
+                      ),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              decoration:
+                                  InputDecoration(labelText: 'URL da Imagem'),
+                              keyboardType: TextInputType.url,
+                              textInputAction: TextInputAction.done,
+                              focusNode: _imageUrlFocusNode,
+                              controller: _imageUrlController,
+                              onFieldSubmitted: (_) {
+                                _saveForm();
+                              },
+                              onSaved: (value) => _formData['imageUrl'] = value,
+                              validator: (value) {
+                                bool isEmpty = value.trim().isEmpty;
+                                bool isInvalid = !isValidImageUrl(value);
+                                if (isEmpty || isInvalid) {
+                                  return 'Informe Url Valida!';
+                                }
+                                return null;
+                              },
                             ),
-                    ),
-                  ],
-                ),
-              ],
-            )),
-      ),
+                          ),
+                          Container(
+                            constraints: BoxConstraints(
+                                minWidth: 100.0, minHeight: 100.0),
+                            width: 100.0,
+                            height: 100.0,
+                            margin: EdgeInsets.only(top: 8.0, left: 10.0),
+                            decoration: BoxDecoration(
+                                border: Border.all(
+                              color: Colors.grey,
+                              width: 1.0,
+                            )),
+                            alignment: Alignment.center,
+                            child: _imageUrlController.text.isEmpty
+                                ? Text('Informe URL')
+                                : Image.network(
+                                    _imageUrlController.text,
+                                    fit: BoxFit.cover,
+                                  ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  )),
+            ),
     );
   }
 }
