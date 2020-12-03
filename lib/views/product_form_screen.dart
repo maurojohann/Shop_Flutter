@@ -70,7 +70,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     _imageUrlFocusNode.dispose();
   }
 
-  void _saveForm() {
+  Future<void> _saveForm() async {
     var isValid = _form.currentState.validate();
     if (!isValid) {
       return;
@@ -90,32 +90,31 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
     });
 
     final products = Provider.of<Products>(context, listen: false);
-    if (_formData['id'] == null) {
-      products.addProduct(product).catchError((error) {
-        return showDialog<Null>(
-            context: context,
-            builder: (ctx) => AlertDialog(
-                  title: Text('Ocorreu um erro'),
-                  content: Text('Ocorrreu um erro para salvar o produto!'),
-                  actions: [
-                    FlatButton(
-                        color: Theme.of(context).primaryColor,
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: Text('ok'))
-                  ],
-                ));
-      }).then((_) {
-        setState(() {
-          _isLoading = false;
-        });
-        Navigator.of(context).pop();
-      });
-    } else {
-      products.updateProduct(product);
+    try {
+      if (_formData['id'] == null) {
+        await products.addProduct(product);
+      } else {
+        await products.updateProduct(product);
+      }
+      Navigator.of(context).pop();
+    } catch (error) {
+      await showDialog<Null>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+                title: Text('Ocorreu um erro'),
+                content: Text('Ocorrreu um erro para salvar o produto!'),
+                actions: [
+                  FlatButton(
+                    color: Theme.of(context).primaryColor,
+                    child: Text('Fechar'),
+                    onPressed: () => Navigator.of(context).pop(),
+                  )
+                ],
+              ));
+    } finally {
       setState(() {
         _isLoading = false;
       });
-      Navigator.of(context).pop();
     }
   }
 
