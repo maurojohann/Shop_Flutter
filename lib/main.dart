@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:shop/providers/cart.dart';
-import 'package:shop/providers/orders.dart';
-import 'package:shop/views/cart_screen.dart';
-import 'package:shop/views/orders_screen.dart';
-import 'package:shop/views/product_form_screen.dart';
-import 'package:shop/views/products_screen.dart';
-import 'views/products_overview_screen.dart';
-
 import 'utils/app_routes.dart';
-import 'views/product_detail_screen.dart';
+
+import 'views/auth_home_screen.dart';
+import './views/cart_screen.dart';
+import './views/orders_screen.dart';
+import './views/product_detail_screen.dart';
+import './views/products_screen.dart';
+import './views/product_form_screen.dart';
+import './views/products_overview_screen.dart';
+
+import './providers/orders.dart';
+import './providers/cart.dart';
 import './providers/products.dart';
+import './providers/auth.dart';
 
 void main() {
   runApp(MyApp());
@@ -23,14 +26,22 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (ctx) => new Products(),
+          create: (ctx) => new Auth(),
         ),
+        ChangeNotifierProxyProvider<Auth, Products>(
+            create: (_) => new Products(null, []),
+            update: (ctx, auth, previousProducts) => new Products(
+                  auth.token,
+                  previousProducts.items,
+                )),
         ChangeNotifierProvider(
           create: (ctx) => new Cart(),
         ),
-        ChangeNotifierProvider(
-          create: (ctx) => new Orders(),
-        )
+        ChangeNotifierProxyProvider<Auth, Orders>(
+          create: (ctx) => new Orders(null, []),
+          update: (ctx, auth, previousOrders) =>
+              new Orders(auth.token, previousOrders.items),
+        ),
       ],
       child: MaterialApp(
         title: 'Minha Loja',
@@ -41,8 +52,10 @@ class MyApp extends StatelessWidget {
           fontFamily: 'Lato',
           visualDensity: VisualDensity.adaptivePlatformDensity,
         ),
-        home: ProductOverviewScreen(),
+        //home: AuthScreen(),
         routes: {
+          AppRoutes.AUTH_HOME: (ctx) => AuthOrHomeScreen(),
+          //   AppRoutes.HOME: (ctx) => ProductOverviewScreen(),
           AppRoutes.PRODUCT_DETAIL: (ctx) => ProductDetailScreen(),
           AppRoutes.CART: (ctx) => CartScreen(),
           AppRoutes.ORDERS: (ctx) => OrdersScreen(),
