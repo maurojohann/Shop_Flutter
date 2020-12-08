@@ -10,12 +10,42 @@ class AuthCard extends StatefulWidget {
   _AuthCardState createState() => _AuthCardState();
 }
 
-class _AuthCardState extends State<AuthCard> {
+class _AuthCardState extends State<AuthCard>
+    with SingleTickerProviderStateMixin {
   GlobalKey<FormState> _form = GlobalKey();
   bool _isLoading = false;
   AuthMode _authMode = AuthMode.Login;
 
   final _passwordController = TextEditingController();
+
+  AnimationController _controller;
+  Animation<Size> _heigthAnimation;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 400),
+    );
+    _heigthAnimation = Tween(
+      begin: Size(double.infinity, 175),
+      end: Size(double.infinity, 240),
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.linear,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    _controller.dispose();
+  }
 
   final Map<String, String> _authData = {
     'email': '',
@@ -73,10 +103,12 @@ class _AuthCardState extends State<AuthCard> {
       setState(() {
         _authMode = AuthMode.Signup;
       });
+      _controller.forward();
     } else {
       setState(() {
         _authMode = AuthMode.Login;
       });
+      _controller.reverse();
     }
   }
 
@@ -88,10 +120,14 @@ class _AuthCardState extends State<AuthCard> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10.0),
       ),
-      child: Container(
-        padding: EdgeInsets.all(16.0),
-        height: _authMode == AuthMode.Login ? 220 : 305,
-        width: deviceSize.width * 0.75,
+      child: AnimatedBuilder(
+        animation: _heigthAnimation,
+        builder: (context, ch) => Container(
+            padding: EdgeInsets.all(16.0),
+            height: _heigthAnimation.value.height,
+            //height: _authMode == AuthMode.Login ? 220 : 305,
+            width: deviceSize.width * 0.75,
+            child: ch),
         child: Form(
           key: _form,
           child: Column(
