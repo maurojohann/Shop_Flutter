@@ -9,7 +9,6 @@ import './views/orders_screen.dart';
 import './views/product_detail_screen.dart';
 import './views/products_screen.dart';
 import './views/product_form_screen.dart';
-import './views/products_overview_screen.dart';
 
 import './providers/orders.dart';
 import './providers/cart.dart';
@@ -29,18 +28,19 @@ class MyApp extends StatelessWidget {
           create: (ctx) => new Auth(),
         ),
         ChangeNotifierProxyProvider<Auth, Products>(
-            create: (_) => new Products(null, []),
+            create: (_) => new Products(),
             update: (ctx, auth, previousProducts) => new Products(
                   auth.token,
+                  auth.userId,
                   previousProducts.items,
                 )),
         ChangeNotifierProvider(
           create: (ctx) => new Cart(),
         ),
         ChangeNotifierProxyProvider<Auth, Orders>(
-          create: (ctx) => new Orders(null, []),
+          create: (ctx) => new Orders(),
           update: (ctx, auth, previousOrders) =>
-              new Orders(auth.token, previousOrders.items),
+              new Orders(auth.token, auth.userId, previousOrders.items),
         ),
       ],
       child: MaterialApp(

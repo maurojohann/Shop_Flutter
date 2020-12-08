@@ -10,8 +10,9 @@ class Products with ChangeNotifier {
   final String _baseUrl = '${Constants.BASE_API_URL}/products';
   List<Product> _items = [];
   String _token;
+  String _userId;
 
-  Products(this._token, this._items);
+  Products([this._token, this._userId, this._items = const []]);
 
   List<Product> get items => [..._items];
 
@@ -20,11 +21,19 @@ class Products with ChangeNotifier {
   }
 
   Future<void> loadProducts() async {
+    print(_userId);
+
     final response = await http.get('$_baseUrl.json?auth=$_token');
+    final favResponse = await http.get(
+        '${Constants.BASE_API_URL}/userFavorites/$_userId.json?auth=$_token');
+
+    final Map favMap = json.decode(favResponse.body);
+
     Map<String, dynamic> data = json.decode(response.body);
     _items.clear();
     if (data != null) {
       data.forEach((productId, productData) {
+        final isFavorite = favMap == null ? false : favMap[productId] ?? false;
         _items.add(
           Product(
             id: productId,
@@ -32,7 +41,7 @@ class Products with ChangeNotifier {
             price: productData['price'],
             description: productData['description'],
             imageUrl: productData['imageUrl'],
-            isFavorite: productData['isFavorite'],
+            isFavorite: isFavorite,
           ),
         );
       });
@@ -49,7 +58,6 @@ class Products with ChangeNotifier {
         'description': newProduct.description,
         'price': newProduct.price,
         'imageUrl': newProduct.imageUrl,
-        'isFavorite': newProduct.isFavorite,
       }),
     );
     _items.add(
@@ -80,7 +88,6 @@ class Products with ChangeNotifier {
             'description': product.description,
             'price': product.price,
             'imageUrl': product.imageUrl,
-            'isFavorite': product.isFavorite,
           }));
       _items[index] = product;
       notifyListeners();

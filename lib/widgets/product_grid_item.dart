@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shop/providers/auth.dart';
-import 'package:shop/providers/auth.dart';
 
 import 'package:shop/utils/app_routes.dart';
 import '../providers/product.dart';
@@ -43,7 +42,7 @@ class ProductGridItem extends StatelessWidget {
                 product.isFavorite ? Icons.favorite : Icons.favorite_border,
               ),
               onPressed: () {
-                product.toggleFavorite(auth.token);
+                product.toggleFavorite(auth.token, auth.userId);
               },
             ),
           ),
