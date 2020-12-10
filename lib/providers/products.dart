@@ -21,8 +21,6 @@ class Products with ChangeNotifier {
   }
 
   Future<void> loadProducts() async {
-    print(_userId);
-
     final response = await http.get('$_baseUrl.json?auth=$_token');
     final favResponse = await http.get(
         '${Constants.BASE_API_URL}/userFavorites/$_userId.json?auth=$_token');
